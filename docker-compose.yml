@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: crm_mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongo-data:/data/db
+
+  app:
+    build: .
+    container_name: crm_backend
+    ports:
+      - "8080:8080"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      JWT_SECRET: your_jwt_secret
+      SMTP_HOST: smtp.example.com
+      SMTP_PORT: 587
+      SMTP_MAIL: your_email@example.com
+      SMTP_PASSWORD: your_email_password
+    depends_on:
+      - mongo
+
+volumes:
+  mongo-data:
