@@ -488,7 +488,7 @@ The application automatically sends email notifications when interactions are cr
 ### Deployment
 The project is deployed on AWS. It can be accessed via the provided AWS endpoint. The Docker image is also available on Docker Hub:
 
-Docker Image: 
+Docker Image: https://hub.docker.com/r/rohanyh/matriceai_crm/tags
 Live Application: 
 
 ### Challenges
