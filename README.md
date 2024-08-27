@@ -2,6 +2,12 @@
 
 This project is a backend system for a Customer Relationship Management (CRM) application. It is built using Go with the Gin framework, and it integrates MongoDB for database management. The application is containerized using Docker, ensuring easy deployment and scalability. The backend supports full CRUD operations, JWT-based authentication, and includes comprehensive security measures such as role-based access control.
 
+## System Design
+
+![Screenshot (138)](https://github.com/user-attachments/assets/8dfff095-567c-4a9c-8372-5fc46d29583c)
+
+
+
 ## Features
 
 - **User and Customer Management:**
