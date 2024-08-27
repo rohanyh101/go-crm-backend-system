@@ -9,7 +9,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/rohanhonnakatti/golang-jwt-auth/database"
+	"github.com/roh4nyh/matrice_ai/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -58,15 +58,15 @@ func UpdateCustomerToken(signedToken, customerId string) {
 	updateObj = append(updateObj, bson.E{Key: "token", Value: signedToken})
 
 	updatedAt, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updateObj = append(updateObj, bson.E{Key: "updatedat", Value: updatedAt})
+	updateObj = append(updateObj, bson.E{Key: "updated_at", Value: updatedAt})
 
 	upsert := true
-	filter := bson.M{"customerid": customerId}
+	filter := bson.M{"customer_id": customerId}
 	opt := options.UpdateOptions{
 		Upsert: &upsert,
 	}
 
-	_, err := UserCollection.UpdateOne(
+	_, err := CustomerCollection.UpdateOne(
 		ctx,
 		filter,
 		bson.D{

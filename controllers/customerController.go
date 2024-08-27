@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/rohanhonnakatti/golang-jwt-auth/database"
-	helper "github.com/rohanhonnakatti/golang-jwt-auth/helpers"
-	"github.com/rohanhonnakatti/golang-jwt-auth/models"
+	"github.com/roh4nyh/matrice_ai/database"
+	helper "github.com/roh4nyh/matrice_ai/helpers"
+	"github.com/roh4nyh/matrice_ai/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -101,7 +101,7 @@ func CustomerLogIn() gin.HandlerFunc {
 		}
 
 		if foundCustomer.Email == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "user not found"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "customer not found"})
 			return
 		}
 
@@ -113,7 +113,7 @@ func CustomerLogIn() gin.HandlerFunc {
 
 		helper.UpdateCustomerToken(token, foundCustomer.CustomerId)
 
-		err = CustomerCollection.FindOne(ctx, bson.M{"customerid": foundCustomer.CustomerId}).Decode(&foundCustomer)
+		err = CustomerCollection.FindOne(ctx, bson.M{"customer_id": foundCustomer.CustomerId}).Decode(&foundCustomer)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -154,7 +154,7 @@ func GetCustomer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customerId := c.Param("customer_id")
 
-		if err := helper.MatchUserTypeToCid(c, customerId); err != nil {
+		if err := helper.MatchCustomerTypeToCid(c, customerId); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -163,7 +163,7 @@ func GetCustomer() gin.HandlerFunc {
 		defer cancel()
 
 		var customer models.Customer
-		err := CustomerCollection.FindOne(ctx, bson.M{"customerid": customerId}).Decode(&customer)
+		err := CustomerCollection.FindOne(ctx, bson.M{"customer_id": customerId}).Decode(&customer)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
@@ -181,7 +181,7 @@ func UpdateCustomer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customerId := c.Param("customer_id")
 
-		if err := helper.MatchUserTypeToCid(c, customerId); err != nil {
+		if err := helper.MatchCustomerTypeToCid(c, customerId); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -202,12 +202,16 @@ func UpdateCustomer() gin.HandlerFunc {
 			updateObj["name"] = customer.Name
 		}
 
-		if customer.Status != nil {
-			updateObj["status"] = customer.Status
+		if customer.Email != nil {
+			updateObj["email"] = customer.Email
 		}
 
-		if customer.Notes != nil {
-			updateObj["notes"] = customer.Notes
+		if customer.Company != nil {
+			updateObj["company"] = customer.Company
+		}
+
+		if customer.Phone != nil {
+			updateObj["phone"] = customer.Phone
 		}
 
 		if customer.Password != nil {
@@ -215,18 +219,18 @@ func UpdateCustomer() gin.HandlerFunc {
 			updateObj["password"] = password
 		}
 
-		updateObj["updatedat"] = time.Now()
+		updateObj["updated_at"] = time.Now()
 
-		filter := bson.M{"customerid": bson.M{"$eq": customerId}}
+		filter := bson.M{"customer_id": bson.M{"$eq": customerId}}
 		update := bson.M{"$set": updateObj}
 
-		result, err := CustomerCollection.UpdateOne(ctx, filter, update)
+		_, err := CustomerCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while updating customer"})
 			return
 		}
 
-		c.JSON(http.StatusOK, result)
+		c.JSON(http.StatusOK, gin.H{"message": "customer updated successfully"})
 	}
 }
 
@@ -234,7 +238,7 @@ func DeleteCustomer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customerId := c.Param("customer_id")
 
-		if err := helper.MatchUserTypeToCid(c, customerId); err != nil {
+		if err := helper.MatchCustomerTypeToCid(c, customerId); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -242,14 +246,14 @@ func DeleteCustomer() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		filter := bson.M{"customerid": bson.M{"$eq": customerId}}
+		filter := bson.M{"customer_id": bson.M{"$eq": customerId}}
 
-		result, err := CustomerCollection.DeleteOne(ctx, filter)
+		_, err := CustomerCollection.DeleteOne(ctx, filter)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while deleting customer"})
 			return
 		}
 
-		c.JSON(http.StatusOK, result)
+		c.JSON(http.StatusOK, gin.H{"message": "customer deleted successfully"})
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	helper "github.com/rohanhonnakatti/golang-jwt-auth/helpers"
+	helper "github.com/roh4nyh/matrice_ai/helpers"
 )
 
 func AuthenticateUser() gin.HandlerFunc {

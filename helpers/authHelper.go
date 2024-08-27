@@ -7,9 +7,9 @@ import (
 )
 
 func CheckUserType(c *gin.Context, role string) (err error) {
-	userType := c.GetString("role")
+	userRole := c.GetString("role")
 
-	if userType != role {
+	if userRole != role {
 		err = fmt.Errorf("UnAuthenticated to access this resource")
 		return err
 	}
@@ -33,7 +33,7 @@ func MatchUserTypeToUid(c *gin.Context, userId string) (err error) {
 	return err
 }
 
-func MatchUserTypeToCid(c *gin.Context, customerId string) (err error) {
+func MatchCustomerTypeToCid(c *gin.Context, customerId string) (err error) {
 	cid := c.GetString("cid")
 
 	if cid == customerId {

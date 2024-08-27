@@ -9,7 +9,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/rohanhonnakatti/golang-jwt-auth/database"
+	"github.com/roh4nyh/matrice_ai/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,7 +32,7 @@ const (
 var UserCollection *mongo.Collection = database.OpenCollection(userDatabaseName, userCollectionName)
 var USER_SECRET_KEY string = os.Getenv("USER_SECRET_KEY")
 
-func GenerateUserToken(email, name, role, uId string) (signedToken string, err error) {
+func GenerateUserToken(email, name, uId, role string) (signedToken string, err error) {
 	claims := &SignedUserDetails{
 		Email: email,
 		Name:  name,
@@ -60,10 +60,10 @@ func UpdateUserToken(signedToken, userId string) {
 	updateObj = append(updateObj, bson.E{Key: "token", Value: signedToken})
 
 	updatedAt, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
-	updateObj = append(updateObj, bson.E{Key: "updatedat", Value: updatedAt})
+	updateObj = append(updateObj, bson.E{Key: "updated_at", Value: updatedAt})
 
 	upsert := true
-	filter := bson.M{"userid": userId}
+	filter := bson.M{"user_id": userId}
 	opt := options.UpdateOptions{
 		Upsert: &upsert,
 	}

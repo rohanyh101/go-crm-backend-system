@@ -8,9 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/rohanhonnakatti/golang-jwt-auth/database"
-	"github.com/rohanhonnakatti/golang-jwt-auth/models"
-	"github.com/rohanhonnakatti/golang-jwt-auth/utils"
+	"github.com/roh4nyh/matrice_ai/database"
+	"github.com/roh4nyh/matrice_ai/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,7 +23,7 @@ const (
 var TicketValidate = validator.New()
 var TicketCollection *mongo.Collection = database.OpenCollection(TicketDatabaseName, TicketCollectionName)
 
-func CreateTicketAndSendEmail() gin.HandlerFunc {
+func CreateTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
@@ -41,21 +40,45 @@ func CreateTicketAndSendEmail() gin.HandlerFunc {
 			return
 		}
 
+		interactionIdStr := c.Param("interaction_id")
+		interactionId, err := primitive.ObjectIDFromHex(interactionIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid interaction ID"})
+			return
+		}
+
+		customerIdStr := c.GetString("cid")
+		customerId, err := primitive.ObjectIDFromHex(customerIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+			return
+		}
+
+		filter := bson.M{
+			"_id":         interactionId,
+			"customer_id": customerId,
+		}
+
+		var interaction models.Interaction
+		err = InteractionCollection.FindOne(ctx, filter).Decode(&interaction)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "customer not belongs to this interaction or interaction not exists"})
+			return
+		}
+
+		ticket.CustomerID = customerId
+		ticket.InteractionID = interactionId
 		ticket.CreatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		ticket.UpdatedAt, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 		ticket.ID = primitive.NewObjectID()
 		ticket.TicketId = ticket.ID.Hex()
 
-		resultInsertionNumber, insertErr := UserCollection.InsertOne(ctx, ticket)
+		resultInsertionNumber, insertErr := TicketCollection.InsertOne(ctx, ticket)
 		if insertErr != nil {
 			msg := fmt.Sprintln("fialed to create Interaction")
 			c.JSON(http.StatusInternalServerError, gin.H{"error": msg})
 			return
 		}
-
-		email := c.GetString("email")
-		// !!! where to send...
-		go utils.SendEmailToUser(ticket, email)
 
 		c.JSON(http.StatusCreated, resultInsertionNumber)
 	}
@@ -63,15 +86,39 @@ func CreateTicketAndSendEmail() gin.HandlerFunc {
 
 func UpdateTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ticketId := c.Param("ticket_id")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
 		var ticket models.Ticket
-
 		if err := c.BindJSON(&ticket); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ticketIdStr := c.Param("ticket_id")
+		ticketId, err := primitive.ObjectIDFromHex(ticketIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ticket ID"})
+			return
+		}
+
+		customerIdStr := c.GetString("cid")
+		customerId, err := primitive.ObjectIDFromHex(customerIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+			return
+		}
+
+		filter := bson.M{
+			"_id":         ticketId,
+			"customer_id": customerId,
+		}
+
+		// var ticket models.Ticket
+		err = TicketCollection.FindOne(ctx, filter).Err()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while fetching interaction"})
 			return
 		}
 
@@ -85,40 +132,29 @@ func UpdateTicket() gin.HandlerFunc {
 			updateObj["description"] = ticket.Description
 		}
 
-		// if user.Role != nil && *user.Role == "ADMIN" {
-		// 	updateObj["role"] = user.Role
-		// }
+		updateObj["updated_at"] = time.Now()
 
-		updateObj["updatedat"] = time.Now()
-
-		filter := bson.M{"ticketid": bson.M{"$eq": ticketId}}
 		update := bson.M{"$set": updateObj}
 
-		result, err := UserCollection.UpdateOne(ctx, filter, update)
+		_, err = TicketCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while updating user"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while updating ticket"})
 			return
 		}
 
-		c.JSON(http.StatusOK, result)
+		c.JSON(http.StatusOK, gin.H{"message": "ticket updated successfully"})
 
 	}
 }
 
-func GetTickets() gin.HandlerFunc {
+func GetAllTickets() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
-		// only admin can access all tickets !!!
-		// if err := helper.CheckUserType(c, "ADMIN"); err != nil {
-		// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		// 	return
-		// }
-
 		var tickets []models.Ticket
 
-		cursor, err := UserCollection.Find(ctx, bson.M{})
+		cursor, err := TicketCollection.Find(ctx, bson.M{})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while listing users"})
 			return
@@ -159,13 +195,18 @@ func GetTickets() gin.HandlerFunc {
 
 func GetTicketsByUserID() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId := c.Param("user_id")
-
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
+		userIdStr := c.Param("user_id")
+		userId, err := primitive.ObjectIDFromHex(userIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
+			return
+		}
+
 		var tickets []models.Ticket
-		cursor, err := InteractionCollection.Find(ctx, bson.M{"interactionid": userId})
+		cursor, err := TicketCollection.Find(ctx, bson.M{"user_id": userId})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while listing users"})
 			return
@@ -188,14 +229,31 @@ func GetTicketsByUserID() gin.HandlerFunc {
 
 func DeleteTicket() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ticketId := c.Param("ticket_id")
-
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
-		_, err := TicketCollection.DeleteOne(ctx, bson.M{"ticketid": ticketId})
+		ticketIdStr := c.Param("ticket_id")
+		ticketId, err := primitive.ObjectIDFromHex(ticketIdStr)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while deleting ticket"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ticket ID"})
+			return
+		}
+
+		customerIdStr := c.GetString("cid")
+		customerId, err := primitive.ObjectIDFromHex(customerIdStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+			return
+		}
+
+		filter := bson.M{
+			"_id":         ticketId,
+			"customer_id": customerId,
+		}
+
+		_, err = TicketCollection.DeleteOne(ctx, filter)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "ticket deletion failed or ticket not found"})
 			return
 		}
 

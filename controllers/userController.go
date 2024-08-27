@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/rohanhonnakatti/golang-jwt-auth/database"
-	helper "github.com/rohanhonnakatti/golang-jwt-auth/helpers"
-	"github.com/rohanhonnakatti/golang-jwt-auth/models"
+	"github.com/roh4nyh/matrice_ai/database"
+	helper "github.com/roh4nyh/matrice_ai/helpers"
+	"github.com/roh4nyh/matrice_ai/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,6 +48,14 @@ func VerifyPassword(userPassword, foundUserPassword string) (bool, string) {
 	return check, msg
 }
 
+// @Summary Add a new pet to the store
+// @Description get string by ID
+// @ID get-string-by-int
+// @Accept  json
+// @Produce  json
+// @Param   some_id     path    int     true        "Some ID"
+// @Success 200 {string} string  "ok"
+// @Router /string/{some_id} [get]
 func UserSignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
@@ -84,7 +92,7 @@ func UserSignUp() gin.HandlerFunc {
 		user.ID = primitive.NewObjectID()
 		user.UserId = user.ID.Hex()
 
-		token, _ := helper.GenerateUserToken(*user.Email, *user.Name, *user.Role, user.UserId)
+		token, _ := helper.GenerateUserToken(*user.Email, *user.Name, user.UserId, *user.Role)
 		user.Token = &token
 
 		resultInsertionNumber, insertErr := UserCollection.InsertOne(ctx, user)
@@ -98,6 +106,14 @@ func UserSignUp() gin.HandlerFunc {
 	}
 }
 
+// PingExample godoc
+// @Summary ping example
+// @Schemes
+// @Description do ping
+// @Accept json
+// @Produce json
+// @Success 200 {string} Helloworld
+// @Router /example/helloworld [get]
 func UserLogIn() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
@@ -128,7 +144,7 @@ func UserLogIn() gin.HandlerFunc {
 			return
 		}
 
-		token, err := helper.GenerateUserToken(*foundUser.Email, *foundUser.Name, *foundUser.Role, foundUser.UserId)
+		token, err := helper.GenerateUserToken(*foundUser.Email, *foundUser.Name, foundUser.UserId, *foundUser.Role)
 		if err != nil || token == "" {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -136,7 +152,7 @@ func UserLogIn() gin.HandlerFunc {
 
 		helper.UpdateUserToken(token, foundUser.UserId)
 
-		err = UserCollection.FindOne(ctx, bson.M{"userid": foundUser.UserId}).Decode(&foundUser)
+		err = UserCollection.FindOne(ctx, bson.M{"user_id": foundUser.UserId}).Decode(&foundUser)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -151,7 +167,7 @@ func GetUsers() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		if err := helper.CheckUserType(c, "ADMIN"); err != nil {
+		if err := helper.CheckUserType(c, models.ROLE_ADMIN); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -230,6 +246,15 @@ func UpdateUser() gin.HandlerFunc {
 			updateObj["name"] = user.Name
 		}
 
+		if user.Email != nil {
+			updateObj["email"] = user.Email
+		}
+
+		// if user.Password != nil {
+		// 	password := HashPassword(*user.Password)
+		// 	updateObj["password"] = password
+		// }
+
 		if user.Password != nil {
 			password := HashPassword(*user.Password)
 			updateObj["password"] = password
@@ -241,16 +266,16 @@ func UpdateUser() gin.HandlerFunc {
 
 		updateObj["updated_at"] = time.Now()
 
-		filter := bson.M{"userid": bson.M{"$eq": userId}}
+		filter := bson.M{"user_id": bson.M{"$eq": userId}}
 		update := bson.M{"$set": updateObj}
 
-		result, err := UserCollection.UpdateOne(ctx, filter, update)
+		_, err := UserCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while updating user"})
 			return
 		}
 
-		c.JSON(http.StatusOK, result)
+		c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
 	}
 }
 
@@ -266,7 +291,7 @@ func DeleteUser() gin.HandlerFunc {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 
-		result, err := UserCollection.DeleteOne(ctx, bson.M{"userid": userId})
+		result, err := UserCollection.DeleteOne(ctx, bson.M{"user_id": userId})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error occurred while deleting user"})
 			return

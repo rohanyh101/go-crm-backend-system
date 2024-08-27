@@ -2,20 +2,22 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-	"github.com/rohanhonnakatti/golang-jwt-auth/routes"
+
+	// _ "github.com/roh4nyh/matrice_ai/docs"
+	"github.com/roh4nyh/matrice_ai/routes"
+	// swaggerfiles "github.com/swaggo/files"
+	// ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("error loading .env file: %v", err)
-	}
+	// err := godotenv.Load(".env")
+	// if err != nil {
+	// 	log.Printf("error loading .env file: %v", err)
+	// }
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
@@ -24,6 +26,8 @@ func main() {
 
 	router := gin.New()
 	router.Use(gin.Logger())
+
+	// router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	routes.AuthRoutes(router)
 
