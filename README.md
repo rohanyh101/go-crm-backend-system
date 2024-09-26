@@ -482,7 +482,7 @@ docker-compose up --build
     }
    ```
 
-### Email Notifications
+### Email Notification Service
 The application automatically sends email notifications when interactions are created. The email content can be configured in the code, and the SMTP settings must be provided in the .env file.
 
 ### Deployment
@@ -491,6 +491,7 @@ The project is deployed on AWS. It can be accessed via the provided AWS endpoint
 Docker Image: https://hub.docker.com/r/rohanyh/matriceai_crm/tags
 Live Application: 
 
+<!--
 ### Challenges
 During the development process, I encountered an unexpected power outage, which posed a significant challenge. Despite this, I managed to implement all the requested features and ensured the project was ready for deployment.
 
@@ -498,6 +499,7 @@ During the development process, I encountered an unexpected power outage, which 
 Enhancing the security measures with more granular permissions.
 Implementing a more robust logging and monitoring system.
 Adding unit and integration tests for better code coverage.
+-->
 
 ### Contributing
 If you'd like to contribute to this project, please fork the repository and submit a pull request. All contributions are welcome!
