@@ -1,0 +1,151 @@
+# these are total 18 api endpoints
+
+# check health
+curl --location --request GET 'http://localhost:8080/health' \
+    --header 'Content-Type: application/json'
+
+###
+
+# USER ROUTES
+
+# USER AUTHENTICATION / AUTHORIZATION
+
+# user signup
+curl --location --request POST 'http://localhost:8080/users/signup' \
+ --header 'Content-Type: application/json' \
+ --data-raw '{ "name": "rohan", "email": "rohan@gmail.com", "password": "12121212", "role": "ADMIN" }'
+
+###
+# user login
+curl --location --request POST 'http://localhost:8080/users/login' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ "email": "rohanyh101@gmail.com", "password": "12121212" }'
+
+
+# ADMIN
+# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InJvaGFueWgxMDFAZ21haWwuY29tIiwiTmFtZSI6InJvaGFueWgiLCJVaWQiOiI2NmNjOWQ2Y2E3YzNhYzQ2NWZhYjM1OWEiLCJSb2xlIjoiQURNSU4iLCJleHAiOjE3MjU3MTQ2MDV9.4ZRCgWl6f5ex0wldun-23jLdzsWxn76q4VsSJxTQfDM
+
+# USER
+# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6Im1hbm9qQGRvbWFpbi5jb20iLCJOYW1lIjoibWFub2pnaCIsIlVpZCI6IjY2Y2M4N2NhNmNjODc0NzllNDRmMTQ0MyIsIlJvbGUiOiJVU0VSIiwiZXhwIjoxNzI1NzE0NDMzfQ.-a4zKVtUdY5gOjVVDUqrUsL596qIvdOw051YaDAcjpg
+
+
+# USER CRUD OPERATIONS
+
+
+###
+# get all users (ADMIN ONLY) => GET    /users
+curl --location --request GET 'http://localhost:8080/users' \
+    --header 'Content-Type: application/json' \
+    --header 'token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6InJvaGFuQGdtYWlsLmNvbSIsIk5hbWUiOiJyb2hhbiIsIlVpZCI6IjY2Y2M3NWJjZDVjNzgwODY1NjA5YzZkMSIsIlJvbGUiOiJBRE1JTiIsImV4cCI6MTcyNTcxNDIxNX0.WPUlzgKWZN0kzUWvujI4CTVsWw-oAmuX_i3o_d2jKiE'
+
+###
+# update user
+curl --location --request PUT 'http://localhost:8080/users/66cc87ca6cc87479e44f1443' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ "email": "manoj@gmail.com" }' \
+    --header 'token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6Im1hbm9qQGRvbWFpbi5jb20iLCJOYW1lIjoibWFub2pnaCIsIlVpZCI6IjY2Y2M4N2NhNmNjODc0NzllNDRmMTQ0MyIsIlJvbGUiOiJVU0VSIiwiZXhwIjoxNzI1NzE0NDMzfQ.-a4zKVtUdY5gOjVVDUqrUsL596qIvdOw051YaDAcjpg'
+
+
+###
+# delete user
+curl --location --request DELETE 'http://localhost:8080/users/66cc8d343557fdb75b7a32b2' \
+    --header 'Content-Type: application/json' \
+    --header 'token: <token>'
+
+
+
+# USER SERVICES
+
+###
+# create interaction => POST   /users/meet/:customer_id
+curl --location --request POST 'http://localhost:8080/users/meet/66cc9d35a7c3ac465fab3599' \
+    --header 'Content-Type: application/json' \
+    --header 'token: <token>' \
+    --data-raw '{ "title": "demo title", "description": "demo description", "start_time": "2024-08-27T20:03:00Z" }'
+
+###
+# get interaction related to current user => GET    /user/meet/
+curl --location --request GET 'http://localhost:8080/user/meet/' \
+--header 'Content-Type: application/json' \
+--header 'token: <token>'
+
+###
+# get all interaction, admin route => GET    /users/meet/
+curl --location --request GET 'http://localhost:8080/users/meet/' \
+    --header 'Content-Type: application/json' \
+    --header 'token: <token>'
+
+###
+# delete interaction => DELETE   /users/meet/:interaction_id
+curl --location --request DELETE 'http://localhost:8080/users/meet/66ccad18fcf4d6bf088a55fd' \
+    --header 'Content-Type: application/json' \
+    --header 'token: <token>'
+
+
+
+# CUSTOMER ROUTES
+
+# CUSTOMER AUTHENTICATION / AUTHORIZATION
+
+###
+# signup customer => POST   /customers/signup
+curl --location --request POST 'http://localhost:8080/customers/signup' \
+ --header 'Content-Type: application/json' \
+ --data-raw '{ "name": "rahul", "email": "rahul@domain.com", "password": "12121212", "comapny": "TCS", "phone_no": "2222" }'
+
+###
+# login customer => POST   /customers/login
+curl --location --request POST 'http://localhost:8080/customers/login' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ "email": "mynewpc2513@gmail.com", "password": "12121212" }'
+
+
+# CUSTOMER CRUD OPERATIONS
+
+###
+# get all customers => GET    /customers
+curl --location --request GET 'http://localhost:8080/customers/' \
+    --header 'Content-Type: application/json' \
+    --header 'token: <token>'
+
+###
+# update customer =>  PUT    /customers/:customer_id
+curl --location --request PUT 'http://localhost:8080/customers/66cc8d343557fdb75b7a32b2' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{ "name": "rahulp" }' \
+    --header 'token: <token>'
+
+###
+# delete the customer by ID => DELETE /customers/:customer_id
+curl --location --request DELETE 'http://localhost:8080/customers/66cc766447ef7e236f14adb3' \
+    --header 'Content-Type: application/json' \
+    --header 'token: <token>'
+
+
+# CUSTOMER SERVICES
+
+###
+# raise ticket =>  POST   /customers/ticket/:interaction_id
+curl --location --request POST 'http://localhost:8080/customers/ticket/66ccc4d1e3f9cd0e36da4878' \
+ --header 'Content-Type: application/json' \
+ --data-raw '{ "description": "demo description", "status": "open" }' \
+ --header 'token: <token>'
+
+###
+# get all tickets =>  GET    /customers/tickets/
+curl --location --request GET 'http://localhost:8080/customers/tickets/' \
+ --header 'Content-Type: application/json' \
+ --header 'token: <token>'
+
+###
+# update ticket => PUT     /customers/ticket/:ticket_id
+curl --location --request PUT 'http://localhost:8080/customers/ticket/66cce6cad8cd633786e93b75' \
+ --header 'Content-Type: application/json' \
+ --data-raw '{ "description": "new demo description", "status": "solved" }' \
+ --header 'token: <customer_token>'
+
+###
+# delete ticket => DELETE     /customers/ticket/:ticket_id
+curl --location --request DELETE 'http://localhost:8080/customers/ticket/66cce6cad8cd633786e93b75' \
+ --header 'Content-Type: application/json' \
+ --header 'token: <customer_token>'

@@ -9,33 +9,6 @@ import (
 	"github.com/roh4nyh/matrice_ai/models"
 )
 
-// func SendEmailInteraction(interaction models.Interaction, email string) {
-// 	// Example email content
-// 	smtpHost := os.Getenv("SMTP_HOST")
-// 	smtpPort := os.Getenv("SMTP_PORT")
-// 	emailFrom := os.Getenv("SMTP_MAIL")
-// 	emailPassword := os.Getenv("SMTP_PASSWORD")
-// 	// to
-
-// 	to := []string{email}
-
-// 	auth := smtp.PlainAuth("", emailFrom, emailPassword, smtpHost)
-
-// 	msg := []byte("To: " + to[0] + "\r\n" +
-// 		"Subject: " + subject + "\r\n" +
-// 		"\r\n" +
-// 		body + "\r\n")
-
-// 	// Send the email
-// 	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, emailFrom, to, msg)
-// 	if err != nil {
-// 		fmt.Println("Error sending email:", err)
-// 		return
-// 	}
-
-// 	fmt.Println("Email sent successfully to:", to)
-// }
-
 func SendInteractionNotificationWithEmail(interaction models.Interaction, emailTo, meetingStartTime string) error {
 	host := os.Getenv("SMTP_HOST")
 	port := os.Getenv("SMTP_PORT")

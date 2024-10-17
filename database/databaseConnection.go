@@ -11,13 +11,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// DBInstance initializes a new MongoDB client instance
 func DBInstance() *mongo.Client {
 	// Load environment variables from .env file
 	// err := godotenv.Load(".env")
 	// if err != nil {
-	// 	log.Printf("error loading .env file: %v", err)
-	// }
+	//  	log.Printf("error loading .env file: %v", err)
+	//  }
 
 	// Get MongoDB URI from environment variables
 	MONGO_URI := os.Getenv("MONGO_URI")
@@ -45,7 +44,6 @@ func DBInstance() *mongo.Client {
 	return client
 }
 
-// OpenCollection opens a collection from the specified database
 func OpenCollection(databaseName, collectionName string) *mongo.Collection {
 	client := DBInstance()
 
